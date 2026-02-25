@@ -1,0 +1,27 @@
+{
+  "name": "acumen/messaging-service",
+  "description": "Enterprise messaging microservice (Email, SMS, WhatsApp)",
+  "license": "proprietary",
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Deepu Kunjumon",
+      "email": "deepu.k@acumengroup.in"
+    }
+  ],
+  "minimum-stability": "stable",
+  "require": {
+    "slim/slim": "^4",
+    "php-di/php-di": "^7.1",
+    "slim/psr7": "^1.8",
+    "guzzlehttp/guzzle": "^7.10",
+    "monolog/monolog": "^3.10",
+    "psr/log": "^3.0",
+    "ramsey/uuid": "^4.9",
+    "respect/validation": "^2.4"
+  }
+}
