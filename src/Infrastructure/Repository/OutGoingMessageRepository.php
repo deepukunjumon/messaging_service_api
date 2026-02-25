@@ -108,4 +108,39 @@ final class OutgoingMessageRepository
             'error_message' => $errorMessage,
         ]);
     }
+
+    public function getAll(string $from, string $to, string $channel, string $apiClientId): array
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM outgoing_messages WHERE created_at BETWEEN :from AND :to ORDER BY created_at DESC");
+        $stmt->execute([
+            'from' => $from,
+            'to' => $to,
+            'channel' => $channel,
+            'api_client_id' => $apiClientId
+        ]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getById(string $messageId): ?array
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM outgoing_messages WHERE id = :id");
+        $stmt->execute(['id' => $messageId]);
+        $message = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $message ?: null;
+    }
+
+    public function getAllByClientId(string $clientId): array
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM outgoing_messages WHERE client_id = :client_id ORDER BY created_at DESC");
+        $stmt->execute(['client_id' => $clientId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getAllByApiKeyId(string $apiKeyId): array
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM outgoing_messages WHERE api_key_id = :api_key_id ORDER BY created_at DESC");
+        $stmt->execute(['api_key_id' => $apiKeyId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
