@@ -42,13 +42,19 @@ interface OutgoingMessageRepositoryInterface
     /**
      * Get all messages for a given time range, channel, and API client ID.
      *
-     * @param string $from
-     * @param string $to
-     * @param string $channel
-     * @param string $apiClientId
+     * @param string $q
+     * @param string $sortKey
+     * @param string $sortOrder
+     * @param int $offset
+     * @param int $limit
+     * @param ?string $startDate
+     * @param ?string $endDate
+     * @param ?string $channel
+     * @param ?string $clientId
+     * 
      * @return array
      */
-    public function getAll(string $from, string $to, string $channel, string $apiClientId): array;
+    public function getAll(string $q, string $sortKey, string $sortOrder, int $offset, int $limit, ?string $startDate, ?string $endDate, ?string $channel, ?string $clientId): array;
 
     /**
      * Get a message details by its ID.

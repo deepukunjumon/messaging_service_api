@@ -7,6 +7,7 @@ use App\Application\Actions\Email\SendEmailAction;
 use App\Application\Actions\SMS\SendSmsAction;
 use App\Application\Actions\ApiClient\CreateClientAction;
 use App\Application\Actions\ApiClient\GenerateApiKeyAction;
+use App\Application\Actions\OutgoingMessage\GetAllOutgoingMessagesAction;
 use App\Application\Middleware\ApiKeyMiddleware;
 use App\Application\Middleware\CorsMiddleware;
 
@@ -37,6 +38,9 @@ return function (App $app) {
         $group->group('/sms', function ($group) {
             $group->post('/send', SendSmsAction::class);
         })->add(ApiKeyMiddleware::class);
+
+        // Outgoing Messages
+        $group->get('/outgoing-messages', GetAllOutgoingMessagesAction::class);
 
     });
 

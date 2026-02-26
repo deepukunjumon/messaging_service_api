@@ -95,23 +95,67 @@ final class OutgoingMessageRepository implements OutgoingMessageRepositoryInterf
     /**
      * {@inheritDoc}
      */
-    public function getAll(string $from, string $to, string $channel, string $apiClientId): array
+    public function getAll(string $q, string $sortKey, string $sortOrder, int $offset, int $limit, ?string $startDate, ?string $endDate, ?string $channel, ?string $clientId): array
     {
         try {
-            $sql = "SELECT * FROM outgoing_messages 
-                    WHERE created_at BETWEEN :from AND :to 
-                    AND channel = :channel 
-                    AND api_client_id = :api_client_id
-                    ORDER BY created_at DESC";
-            
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->bindValue(':from', $from);
-            $stmt->bindValue(':to', $to);
-            $stmt->bindValue(':channel', $channel);
-            $stmt->bindValue(':api_client_id', $apiClientId);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $sql = "SELECT 
+                        outgoing_messages.id,
+                        outgoing_messages.client_id,
+                        api_clients.name AS api_client,
+                        outgoing_messages.channel,
+                        outgoing_messages.recipient,
+                        outgoing_messages.subject,
+                        outgoing_messages.body,
+                        outgoing_messages.provider,
+                        outgoing_messages.metadata,
+                        outgoing_messages.status,
+                        outgoing_messages.created_at
+                    FROM outgoing_messages
+                    LEFT JOIN api_clients ON outgoing_messages.client_id = api_clients.id
+                    WHERE 1=1";
 
+            $params = [];
+            if ($startDate) { 
+                $sql .= " AND outgoing_messages.created_at >= :start_date"; 
+                $params[':start_date'] = $startDate;
+            }
+            if ($endDate) { 
+                $sql .= " AND outgoing_messages.created_at <= :end_date"; 
+                $params[':end_date'] = $endDate;
+            }
+            if ($channel) { 
+                $sql .= " AND outgoing_messages.channel = :channel"; 
+                $params[':channel'] = $channel;
+            }
+            if ($clientId) { 
+                $sql .= " AND outgoing_messages.client_id = :client_id"; 
+                $params[':client_id'] = $clientId;
+            }
+            if ($q) { 
+                $sql .= " AND (outgoing_messages.recipient LIKE :q1
+                            OR outgoing_messages.subject LIKE :q2
+                            OR outgoing_messages.body LIKE :q3)"; 
+                $params[':q1'] = "%$q%";
+                $params[':q2'] = "%$q%";
+                $params[':q3'] = "%$q%";
+            }
+
+            $allowedSortKeys = ['created_at', 'id', 'channel'];
+            $allowedSortOrder = ['asc', 'desc'];
+            if (!in_array($sortKey, $allowedSortKeys)) $sortKey = 'created_at';
+            if (!in_array(strtolower($sortOrder), $allowedSortOrder)) $sortOrder = 'desc';
+
+            $sql .= " ORDER BY {$sortKey} {$sortOrder} LIMIT :limit OFFSET :offset";
+
+            $stmt = $this->pdo->prepare($sql);
+
+            foreach ($params as $key => $value) $stmt->bindValue($key, $value);
+            $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+
+            $stmt->execute();
+
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
             throw new \RuntimeException("Database error: " . $e->getMessage());
         }
