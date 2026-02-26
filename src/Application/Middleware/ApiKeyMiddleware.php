@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Middleware;
 
-use App\Infrastructure\Repository\ApiKeyRepository;
+use App\Domain\ApiKey\ApiKeyRepositoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -12,9 +12,9 @@ use Slim\Psr7\Response;
 
 final class ApiKeyMiddleware
 {
-    private ApiKeyRepository $apiKeyRepository;
+    private ApiKeyRepositoryInterface $apiKeyRepository;
 
-    public function __construct(ApiKeyRepository $apiKeyRepository)
+    public function __construct(ApiKeyRepositoryInterface $apiKeyRepository)
     {
         $this->apiKeyRepository = $apiKeyRepository;
     }

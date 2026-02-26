@@ -4,67 +4,65 @@ declare(strict_types=1);
 
 namespace App\Application\Actions\ApiClient;
 
-use App\Infrastructure\Repository\ApiClientRepository;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface as Response;
+use Respect\Validation\Validator as v;
 use Throwable;
+use App\Infrastructure\Validation\ValidationUtil;
 
-final class CreateClientAction
+final class CreateClientAction extends ApiClientAction
 {
-    private ApiClientRepository $apiClientRepo;
+    /**
+     * {@inheritDoc}
+     */
+    protected function action(): Response
+    {
+        $data = $this->getFormData();
 
-    public function __construct(
-        ApiClientRepository $apiClientRepo
-    ) {
-        $this->apiClientRepo = $apiClientRepo;
-    }
+        // Sanitize Input
+        $input = [
+            'clientName' => trim((string)($data['clientName'] ?? '')),
+            'description' => trim((string)($data['description'] ?? '')),
+        ];
 
-    public function __invoke(
-        ServerRequestInterface $request,
-        ResponseInterface $response
-    ): ResponseInterface {
+        // Validation
+        $rules = [
+            'clientName' => [
+                'rule' => v::notEmpty()->stringType()->length(3, 255),
+                'message' => 'Name is required and must be between 3 and 255 characters'
+            ],
+            'description' => [
+                'rule' => v::optional(v::stringType()->length(0, 500)),
+                'message' => 'Description must be less than 500 characters'
+            ],
+        ];
+
+        $errors = ValidationUtil::validate($input, $rules);
+
+        if (!empty($errors)) {
+            return $this->respondWithError(
+                'Validation failed',
+                422,
+                $errors
+            );
+        }
 
         try {
+            $client = $this->database->transaction(function () use ($input) {
+                return $this->apiClientRepo->create($input['clientName'], $input['description']);
+            });
 
-            $data = $request->getParsedBody() ?? [];
-
-            // Validation
-            if (empty($data['clientName']) || !is_string($data['clientName'])) {
-                return $this->json($response, [
-                    'success' => false,
-                    'message' => 'Client name is required'
-                ], 422);
-            }
-
-            $clientId = $this->apiClientRepo->create(
-                trim($data['clientName']),
-                $data['description'] ?? null
+            return $this->respondWithData([
+                    'clientId' => $client
+                ],
+                201
             );
-
-            return $this->json($response, [
-                'success' => true,
-                'client_id' => $clientId
-            ], 201);
-
         } catch (Throwable $e) {
+            $this->logger->error('Failed to create API client', ['error' => $e->getMessage()]);
 
-            return $this->json($response, [
-                'success' => false,
-                'message' => 'Failed to create client'
-            ], 500);
+            return $this->respondWithError(
+                'Failed to create API client',
+                500
+            );
         }
-    }
-
-    private function json(
-        ResponseInterface $response,
-        array $data,
-        int $status = 200
-    ): ResponseInterface {
-
-        $response->getBody()->write(json_encode($data));
-
-        return $response
-            ->withHeader('Content-Type', 'application/json')
-            ->withStatus($status);
     }
 }

@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Repository;
+namespace App\Infrastructure\Repository\ApiClient;
+
+use App\Domain\ApiClient\ApiClientRepositoryInterface;
 
 use PDO;
 use Ramsey\Uuid\Uuid;
 
-final class ApiClientRepository
+final class ApiClientRepository implements ApiClientRepositoryInterface
 {
     private PDO $pdo;
 

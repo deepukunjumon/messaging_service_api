@@ -6,7 +6,7 @@ namespace App\Application\Actions\Sms;
 
 use App\Domain\Messaging\SmsMessage;
 use Psr\Http\Message\ResponseInterface as Response;
-use Respect\Validation\Validator as v;
+use Respect\Validation\Validator;
 use Slim\Exception\HttpBadRequestException;
 use Throwable;
 
@@ -49,17 +49,17 @@ final class SendSmsAction extends SmsAction
             $errors['phoneNumbers'][] = 'At least one phone number is required';
         } else {
             foreach ($phoneNumbers as $number) {
-                if (!v::regex('/^[6-9]\d{9}$/')->validate($number)) {
+                if (!Validator::regex('/^[6-9]\d{9}$/')->validate($number)) {
                     $errors['phoneNumbers'][] = "Invalid mobile number: {$number}";
                 }
             }
         }
 
-        if (!v::notEmpty()->validate($content)) {
+        if (!Validator::notEmpty()->validate($content)) {
             $errors['content'] = 'Message content cannot be blank';
         }
 
-        if (!v::notEmpty()->validate($dltTemplateId)) {
+        if (!Validator::notEmpty()->validate($dltTemplateId)) {
             $errors['dlt_template_id'] = 'DLT Template ID is required';
         }
 
@@ -98,7 +98,7 @@ final class SendSmsAction extends SmsAction
                 ]
             );
 
-            $result = $this->smsService->sendSms($smsMessage);
+            $result = $this->smsService->send($smsMessage);
 
             $isSuccess = (bool)($result['success'] ?? false);
             $providerResponse = $result['provider_response'] ?? null;

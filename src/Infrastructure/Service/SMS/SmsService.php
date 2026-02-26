@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Service\Sms;
 
 use App\Domain\Messaging\SmsMessage;
-use App\Service\SmsServiceInterface;
+use App\Domain\Service\SmsServiceInterface;
 use GuzzleHttp\Client;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -24,7 +24,10 @@ final class SmsService implements SmsServiceInterface
         ]);
     }
 
-    public function sendSms(SmsMessage $message): array
+    /**
+     * {@inheritDoc}
+     */
+    public function send(SmsMessage $message): array
     {
         try {
 

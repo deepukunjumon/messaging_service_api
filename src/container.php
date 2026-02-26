@@ -5,11 +5,17 @@ declare(strict_types=1);
 use DI\ContainerBuilder;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
-use App\Service\EmailServiceInterface;
+use App\Domain\Service\EmailServiceInterface;
 use App\Infrastructure\Service\Email\EmailService;
-use App\Service\SmsServiceInterface;
+use App\Domain\Service\SmsServiceInterface;
 use App\Infrastructure\Service\Sms\SmsService;
 use App\Infrastructure\Database\Database;
+use App\Domain\ApiClient\ApiClientRepositoryInterface;
+use App\Domain\ApiKey\ApiKeyRepositoryInterface;
+use App\Domain\OutgoingMessage\OutgoingMessageRepositoryInterface;
+use App\Infrastructure\Repository\OutgoingMessage\OutgoingMessageRepository;
+use App\Infrastructure\Repository\ApiClient\ApiClientRepository;
+use App\Infrastructure\Repository\ApiKey\ApiKeyRepository;
 
 $builder = new ContainerBuilder();
 
@@ -54,6 +60,19 @@ $builder->addDefinitions([
             $config,
             $c->get(\Psr\Log\LoggerInterface::class)
         );
+    },
+
+    // repository bindings
+    OutgoingMessageRepositoryInterface::class => function ($c) {
+        return new OutgoingMessageRepository($c->get(\PDO::class));
+    },
+
+    ApiClientRepositoryInterface::class => function ($c) {
+        return new ApiClientRepository($c->get(\PDO::class));
+    },
+
+    ApiKeyRepositoryInterface::class => function ($c) {
+        return new ApiKeyRepository($c->get(\PDO::class));
     },
 ]);
 

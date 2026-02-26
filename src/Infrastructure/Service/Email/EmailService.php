@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Service\Email;
 
 use App\Domain\Messaging\EmailMessage;
-use App\Service\EmailServiceInterface;
+use App\Domain\Service\EmailServiceInterface;
 use GuzzleHttp\Client;
 use Psr\Log\LoggerInterface;
 use Throwable;

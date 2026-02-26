@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace App\Service;
+namespace App\Domain\Service;
 
 use App\Domain\Messaging\SmsMessage;
 
 interface SmsServiceInterface
 {
     /**
-     * Undocumented function
+     * Send a message. Preferred method name.
      *
      * @param SmsMessage $message
-     * @return array
      */
-    public function sendSms(SmsMessage $message): array;
+    public function send(SmsMessage $message): array;
+
 }

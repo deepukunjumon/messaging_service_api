@@ -6,17 +6,17 @@ namespace App\Application\Actions\Email;
 
 use App\Application\Actions\Action;
 use App\Infrastructure\Database\Database;
-use App\Infrastructure\Repository\OutgoingMessageRepository;
-use App\Service\EmailServiceInterface;
+use App\Domain\OutgoingMessage\OutgoingMessageRepositoryInterface;
+use App\Domain\Service\EmailServiceInterface;
 use Psr\Log\LoggerInterface;
 
 abstract class EmailAction extends Action
 {
     protected EmailServiceInterface $emailService;
-    protected OutgoingMessageRepository $outMessageRepo;
+    protected OutgoingMessageRepositoryInterface $outMessageRepo;
     protected Database $database;
 
-    public function __construct(LoggerInterface $logger, EmailServiceInterface $emailService, OutgoingMessageRepository $outMessageRepo, Database $database)
+    public function __construct(LoggerInterface $logger, EmailServiceInterface $emailService, OutgoingMessageRepositoryInterface $outMessageRepo, Database $database)
     {
         parent::__construct($logger);
         $this->emailService = $emailService;

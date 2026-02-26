@@ -4,51 +4,61 @@ declare(strict_types=1);
 
 namespace App\Application\Actions\ApiClient;
 
-use App\Infrastructure\Repository\ApiKeyRepository;
-use App\Infrastructure\Repository\ApiClientRepository;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface as Response;
+use Respect\Validation\Validator as v;
+use App\Infrastructure\Validation\ValidationUtil;
 
-final class GenerateApiKeyAction
+final class GenerateApiKeyAction extends ApiClientAction
 {
-    private ApiKeyRepository $apiKeyRepo;
-    private ApiClientRepository $clientRepo;
+    /**
+     * {@inheritDoc}
+     */
+    protected function action(): Response
+    {
+        $clientId = $this->resolveArg('clientId');
 
-    public function __construct(
-        ApiKeyRepository $apiKeyRepo,
-        ApiClientRepository $clientRepo
-    ) {
-        $this->apiKeyRepo = $apiKeyRepo;
-        $this->clientRepo = $clientRepo;
-    }
+        $input = [
+            'clientId' => $clientId,
+        ];
 
-    public function __invoke(
-        ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
-    ): ResponseInterface {
+        // Validation rules
+        $rules = [
+            'clientId' => [
+                'rule' => v::notEmpty()->stringType()->length(3, 255),
+                'message' => 'Invalid clientId format'
+            ],
+        ];
 
-        $clientId = $args['id'];
+        $errors = ValidationUtil::validate($input, $rules);
 
-        $client = $this->clientRepo->findById($clientId);
-
-        if (!$client) {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'message' => 'Client not found'
-            ]));
-
-            return $response->withStatus(404)
-                ->withHeader('Content-Type', 'application/json');
+        if ($errors) {
+            return $this->respondWithError(
+                'Validation failed',
+                400,
+                $errors
+            );
         }
 
-        $apiKey = $this->apiKeyRepo->create($clientId);
+        // Check if client exists
+        $client = $this->apiClientRepo->findById($clientId);
 
-        $response->getBody()->write(json_encode([
-            'success' => true,
-            'api_key' => $apiKey
-        ]));
+        if (!$client) {
+            return $this->respondWithError(
+                'Client not found',
+                404
+            );
+        }
 
-        return $response->withHeader('Content-Type', 'application/json');
+        // Create API key
+        $result = $this->database->transaction(function () use ($clientId) {
+            $apiKey = $this->apiKeyRepo->create($clientId);
+
+            return [
+                'success' => true,
+                'apiKey'  => $apiKey
+            ];
+        });
+
+        return $this->respondWithData($result, 201);
     }
 }
