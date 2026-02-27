@@ -16,10 +16,7 @@ final class EmailService implements EmailServiceInterface
     private array $config;
     private LoggerInterface $logger;
 
-    public function __construct(
-        array $config,
-        LoggerInterface $logger
-    ) {
+    public function __construct(array $config, LoggerInterface $logger) {
         $this->config = $config;
         $this->logger = $logger;
         $this->client = new Client([
@@ -35,6 +32,17 @@ final class EmailService implements EmailServiceInterface
     public function send(EmailMessage $message): array
     {
         try {
+            $personalization = [
+                'to' => array_map(fn($to) => ['email' => $to], $message->to),
+            ];
+
+            if (!empty($message->cc)) {
+                $personalization['cc'] = array_map(fn($cc) => ['email' => $cc], $message->cc);
+            }
+
+            if (!empty($message->bcc)) {
+                $personalization['bcc'] = array_map(fn($bcc) => ['email' => $bcc], $message->bcc);
+            }
 
             $payload = [
                 'from' => [
@@ -48,38 +56,52 @@ final class EmailService implements EmailServiceInterface
                         'value' => $message->body,
                     ]
                 ],
-                'personalizations' => [
-                    [
-                        'to' => [
-                            ['email' => $message->to]
-                        ]
-                    ]
-                ]
+                'personalizations' => [$personalization],
             ];
+
+            if (!empty($message->attachments)) {
+                $payload['attachments'] = $message->attachments;
+            }
 
             $response = $this->client->post('mail/send', [
                 'headers' => [
                     'api_key'      => $this->config['api_key'],
+                    'Accept'       => 'application/json',
                     'Content-Type' => 'application/json',
                 ],
                 'json' => $payload
             ]);
 
             $status = $response->getStatusCode();
-            $body   = (string) $response->getBody();
+            $body = (string) $response->getBody();
 
-            $this->logger->info('Netcore Email Response', ['status' => $status, 'body' => $body, 'recipient' => $message->to]);
+            $this->logger->info('Netcore Email Response', ['status' => $status, 'body' => $body]);
 
-            if ($status === 200) {
-                return ['success' => true, 'message' => 'Sent successfully', 'provider_response' => json_encode($body)];
+            if ($status >= 200 && $status < 300) {
+                return [
+                    'success' => true, 
+                    'message' => 'Sent successfully', 
+                    'provider_response' => $body
+                ];
             }
-            return ['success' => false, 'message' => 'Sending Email failed', 'provider_response' => json_encode($body)];
+
+            return [
+                'success' => false, 
+                'message' => 'Provider rejected the request', 
+                'provider_response' => $body
+            ];
 
         } catch (Throwable $e) {
+            $this->logger->error('Email sending failed', [
+                'error' => $e->getMessage(), 
+                'recipient' => $message->to[0] ?? 'unknown'
+            ]);
 
-            $this->logger->error('Email sending failed', ['error' => $e->getMessage(), 'recipient' => $message->to]);
-
-            return ['success' => false, 'message' => 'Something went wrong', 'exception' => $e->getMessage()];
+            return [
+                'success' => false, 
+                'message' => $e->getMessage(), 
+                'exception' => true
+            ];
         }
     }
 }

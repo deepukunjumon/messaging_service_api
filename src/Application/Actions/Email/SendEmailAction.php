@@ -20,20 +20,32 @@ final class SendEmailAction extends EmailAction
         $client = $this->client();
         $data   = $this->getFormData();
 
-        // Sanitize Input
+        $cleanEmails = function($input) {
+        if (is_array($input)) {
+            return array_filter(array_map('trim', $input));
+        }
+            return array_filter(array_map('trim', explode(',', (string)($input ?? ''))));
+        };
+
+        $toEmails  = $cleanEmails($data['to'] ?? []);
+        $ccEmails  = $cleanEmails($data['cc'] ?? []);
+        $bccEmails = $cleanEmails($data['bcc'] ?? []);
+
         $input = [
-            'to'      => trim((string)($data['to'] ?? '')),
-            'subject' => trim((string)($data['subject'] ?? '')),
-            'body'    => trim((string)($data['body'] ?? '')),
+            'to'          => implode(',', $toEmails),
+            'cc'          => implode(',', $ccEmails),
+            'bcc'         => implode(',', $bccEmails),
+            'subject'     => trim((string)($data['subject'] ?? '')),
+            'body'        => trim((string)($data['body'] ?? '')),
+            'attachments' => $data['attachments'] ?? []
         ];
 
         $isHtml = (bool)($data['isHtml'] ?? true);
 
-        // Validation
         $rules = [
             'to' => [
-                'rule' => v::notEmpty()->email(),
-                'message' => 'Valid email is required'
+                'rule' => v::notEmpty(),
+                'message' => 'At least one recipient is required'
             ],
             'subject' => [
                 'rule' => v::stringType()->length(3, 255),
@@ -43,21 +55,20 @@ final class SendEmailAction extends EmailAction
                 'rule' => v::stringType()->length(5, null),
                 'message' => 'Body must be at least 5 characters'
             ],
+            'attachments' => [
+                'rule' => v::arrayType(),
+                'message' => 'Attachments must be an array'
+            ]
         ];
 
         $errors = ValidationUtil::validate($input, $rules);
 
         if (!empty($errors)) {
-            return $this->respondWithError(
-                'Validation failed',
-                422,
-                $errors
-            );
+            return $this->respondWithError('Validation failed', 422, $errors);
         }
 
         try {
-            
-            $result = $this->database->transaction(function () use ($client, $input, $isHtml) {
+            $result = $this->database->transaction(function () use ($client, $input, $isHtml, $toEmails, $ccEmails, $bccEmails) {
 
                 $messageId = $this->outMessageRepo->create(
                     $client['id'],
@@ -70,9 +81,12 @@ final class SendEmailAction extends EmailAction
                 );
 
                 $emailMessage = new EmailMessage(
-                    $input['to'],
+                    $toEmails,
                     $input['subject'],
                     $input['body'],
+                    $ccEmails,
+                    $bccEmails,
+                    $input['attachments'],
                     $isHtml
                 );
 
@@ -97,27 +111,15 @@ final class SendEmailAction extends EmailAction
                 return $this->respondWithError(
                     'Provider failed to send email',
                     502,
-                    [
-                        'message_id' => $result['message_id']
-                    ]
+                    ['message_id' => $result['message_id'], 'details' => $result['provider']['message']]
                 );
             }
 
-            return $this->respondWithData(
-                [
-                    'message_id' => $result['message_id']
-                ],
-                201
-            );
+            return $this->respondWithData(['message_id' => $result['message_id']], 201);
 
         } catch (Throwable $e) {
-
             $this->logger->error('Email transaction failed', [$e->getMessage()]);
-
-            return $this->respondWithError(
-                'Internal processing error',
-                500
-            );
+            return $this->respondWithError('Internal processing error', 500);
         }
     }
 }
