@@ -175,4 +175,36 @@ abstract class Action
 
         return $response;
     }
+
+    /**
+     * Reusable CSV export response (Excel-friendly)
+     *
+     * @param array<array<string,mixed>> $rows
+     */
+    protected function respondWithCsv(array $data, string $filename)
+    {
+        $stream = fopen('php://temp', 'w+');
+    
+        if (!empty($data)) {
+            // Write headers
+            fputcsv($stream, array_keys($data[0]), ',', '"', '\\');
+    
+            // Write rows
+            foreach ($data as $row) {
+                fputcsv($stream, $row, ',', '"', '\\');
+            }
+        }
+    
+        rewind($stream);
+        $csv = stream_get_contents($stream);
+        fclose($stream);
+    
+        $response = $this->response
+            ->withHeader('Content-Type', 'text/csv')
+            ->withHeader('Content-Disposition', "attachment; filename=\"$filename\"");
+    
+        $response->getBody()->write($csv);
+    
+        return $response;
+    }
 }
