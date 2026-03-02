@@ -8,6 +8,7 @@ use App\Application\Actions\SMS\SendSmsAction;
 use App\Application\Actions\ApiClient\CreateClientAction;
 use App\Application\Actions\ApiClient\GenerateApiKeyAction;
 use App\Application\Actions\ApiClient\GetAllApiClientsAction;
+use App\Application\Actions\ApiClient\GetClientApiKeysAction;
 use App\Application\Actions\OutgoingMessage\GetAllOutgoingMessagesAction;
 use App\Application\Middleware\ApiKeyMiddleware;
 use App\Application\Middleware\CorsMiddleware;
@@ -29,6 +30,7 @@ return function (App $app) {
         // Client Management
         $group->post('/api-client', CreateClientAction::class);
         $group->post('/api-clients/{clientId}/keys', GenerateApiKeyAction::class);
+        $group->get('/api-clients/{clientId}/keys', GetClientApiKeysAction::class);
         $group->get('/api-clients', GetAllApiClientsAction::class);
 
         // Email Routes

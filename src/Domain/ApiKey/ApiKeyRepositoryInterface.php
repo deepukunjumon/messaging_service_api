@@ -21,4 +21,12 @@ interface ApiKeyRepositoryInterface
     * @return array|null
     */
     public function validate(string $apiKey): ?array;
+
+    /**
+     * Get All API Keys generated for a client
+     * 
+     * @param string $clientId
+     * @return array
+     */
+    public function getClientsApiKeys(string $clientId): array;
 }

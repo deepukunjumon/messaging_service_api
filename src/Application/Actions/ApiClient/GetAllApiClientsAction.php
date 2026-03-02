@@ -14,7 +14,7 @@ final class GetAllApiClientsAction extends ApiClientAction
      */
     protected function action(): Response
     {
-                $params = $this->request->getQueryParams();
+        $params = $this->request->getQueryParams();
 
         $q = isset($params['q']) ? trim((string)$params['q']) : '';
         $sortKey = isset($params['sort_key']) ? trim((string)$params['sort_key']) : 'created_at';
