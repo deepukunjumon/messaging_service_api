@@ -52,6 +52,7 @@ final class CreateClientAction extends ApiClientAction
             });
 
             return $this->respondWithData([
+                    'message' => 'Client created successfully',
                     'clientId' => $client
                 ],
                 201

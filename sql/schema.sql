@@ -9,6 +9,17 @@ CREATE TABLE api_clients (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+ALTER TABLE api_clients ADD CONSTRAINT unique_client_name UNIQUE (name);
+
+ALTER TABLE `api_keys` 
+DROP FOREIGN KEY `api_keys_ibfk_1`;
+ALTER TABLE `api_keys` 
+ADD CONSTRAINT `api_keys_ibfk_1`
+  FOREIGN KEY (`client_id`)
+  REFERENCES `api_clients` (`id`)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE;
+
 CREATE TABLE api_keys (
     id CHAR(36) PRIMARY KEY,
     client_id CHAR(36) NOT NULL,
