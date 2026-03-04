@@ -23,19 +23,22 @@ final class GetAllApiClientsAction extends ApiClientAction
         $limit = isset($params['limit']) ? (int)$params['limit'] : 100;
         $offset = isset($params['offset']) ? (int)$params['offset'] : 0;
 
+        $status = isset($params['status']) ? (int)$params['status'] : null;
+
         $export = isset($params['export']) && filter_var($params['export'], FILTER_VALIDATE_BOOLEAN);
         $type   = isset($params['type']) ? strtolower(trim((string)$params['type'])) : null;
 
         try {
 
-            $clients = $this->apiClientRepo->findAll($q, $sortKey, $sortOrder, $offset, $limit);
+            $clients = $this->apiClientRepo->findAll($q, $sortKey, $sortOrder, $offset, $limit, $status);
             
             if ($export && $type === 'csv') {
 
                 $columns = [
-                    'id'          =>  'Client ID',
+                    'id'          => 'ID',
                     'name'        => 'Name',
                     'description' => 'Description',
+                    'status'      => 'Status',
                     'created_at'  => 'Created At',
                     'updated_at'  => 'Updated At'
                 ];

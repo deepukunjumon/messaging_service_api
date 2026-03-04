@@ -6,7 +6,9 @@ use Psr\Http\Message\ResponseInterface as Response;
 use App\Application\Actions\Email\SendEmailAction;
 use App\Application\Actions\SMS\SendSmsAction;
 use App\Application\Actions\ApiClient\CreateClientAction;
+use App\Application\Actions\ApiClient\UpdateClientStatusAction;
 use App\Application\Actions\ApiClient\GenerateApiKeyAction;
+use App\Application\Actions\ApiClient\UpdateApiKeyStatusAction;
 use App\Application\Actions\ApiClient\GetAllApiClientsAction;
 use App\Application\Actions\ApiClient\GetClientApiKeysAction;
 use App\Application\Actions\OutgoingMessage\GetAllOutgoingMessagesAction;
@@ -29,9 +31,13 @@ return function (App $app) {
 
         // Client Management
         $group->post('/api-client', CreateClientAction::class);
-        $group->post('/api-clients/{clientId}/keys', GenerateApiKeyAction::class);
+        $group->put('/api-clients/{clientId}/status', UpdateClientStatusAction::Class);
         $group->get('/api-clients/{clientId}/keys', GetClientApiKeysAction::class);
         $group->get('/api-clients', GetAllApiClientsAction::class);
+        
+        // API Key Routes
+        $group->post('/api-keys/generate/{clientId}', GenerateApiKeyAction::class);
+        $group->put('/api-keys/{apiKeyId}/status', UpdateApiKeyStatusAction::class);
 
         // Email Routes
         $group->group('/email', function ($group) {

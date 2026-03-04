@@ -12,9 +12,19 @@ interface ApiClientRepositoryInterface
      * @param string $name
      * @param string|null $description
      * 
-     * @return string
+     * @return array
      */
-    public function create(string $name, ?string $description = null): string;
+    public function create(string $name, ?string $description = null): array;
+
+    /**
+     * Update client status
+     * 
+     * @param string $clientId
+     * @param int $status
+     * 
+     * @return bool
+     */
+    public function updateStatus(string $clientId, int $status);
 
     /**
      * Finds an API client by ID.
@@ -32,8 +42,9 @@ interface ApiClientRepositoryInterface
      * @param string|null $sortOrder
      * @param int $limit
      * @param int $offset
+     * @param int|null $status
      *
      * @return array
      */
-    public function findAll(?string $q, ?string $sortKey, ?string $sortOrder, int $offset, int $limit): array;
+    public function findAll(?string $q, ?string $sortKey, ?string $sortOrder, int $offset, int $limit, ?int $status = null): array;
 }

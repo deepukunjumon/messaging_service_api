@@ -48,15 +48,27 @@ final class CreateClientAction extends ApiClientAction
 
         try {
             $client = $this->database->transaction(function () use ($input) {
-                return $this->apiClientRepo->create($input['clientName'], $input['description']);
+                // Create Client
+                $createClient = $this->apiClientRepo->create($input['clientName'], $input['description']);
+                if (!$createClient) {
+                    throw new \RuntimeException("Failed to create client");
+                }
+                // Generate API Key
+                $generateApiKey = $this->apiKeyRepo->create($createClient['id']);
+                if (!$generateApiKey) {
+                    throw new \RuntimeException("Failed to create API key");
+                }
+                return [
+                    'clientId' => $createClient['id'],
+                    'apiKey' => $generateApiKey
+                ];
             });
 
             return $this->respondWithData([
-                    'message' => 'Client created successfully',
-                    'clientId' => $client
-                ],
-                201
-            );
+                'message' => 'Client created successfully',
+                'clientId' => $client['clientId'],
+                'apiKey' => $client['apiKey']
+            ], 201);
         } catch (Throwable $e) {
             $this->logger->error('Failed to create API client', ['error' => $e->getMessage()]);
 

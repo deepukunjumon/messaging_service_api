@@ -21,22 +21,61 @@ final class ApiClientRepository implements ApiClientRepositoryInterface
     /**
      * {@inheritDoc}
      */
-    public function create(string $name, ?string $description = null): string
+    public function create(string $name, ?string $description = null): array
     {
-        $uuid = Uuid::uuid4()->toString();
+        try {
+            $uuid = Uuid::uuid4()->toString();
 
-        $stmt = $this->pdo->prepare("
-            INSERT INTO api_clients (id, name, description)
-            VALUES (:id, :name, :description)
-        ");
+            $stmt = $this->pdo->prepare("
+                INSERT INTO api_clients (id, name, description)
+                VALUES (:id, :name, :description)
+            ");
 
-        $stmt->execute([
-            'id' => $uuid,
-            'name' => $name,
-            'description' => $description
-        ]);
+            $stmt->execute([
+                'id' => $uuid,
+                'name' => $name,
+                'description' => $description
+            ]);
 
-        return $uuid;
+            $result = [
+                'id' => $uuid,
+                'name' => $name,
+            ];
+
+            return $result;
+        } catch (\PDOException $e) {
+            throw new \RuntimeException("Database error: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function updateStatus(string $clientId, int $status): bool
+    {
+        try {
+            $sql = "UPDATE api_clients
+                    SET status = :status,
+                        updated_at = NOW()
+                    WHERE id = :id";
+
+            $stmt = $this->pdo->prepare($sql);
+
+            $stmt->bindParam(':status', $status, \PDO::PARAM_INT);
+            $stmt->bindParam(':id', $clientId, \PDO::PARAM_STR);
+
+            $stmt->execute();
+
+            return $stmt->rowCount() > 0;
+
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to update client status', [
+                'clientId' => $clientId,
+                'error' => $e->getMessage()
+            ]);
+
+            return false;
+        }
     }
 
     /**
@@ -56,7 +95,7 @@ final class ApiClientRepository implements ApiClientRepositoryInterface
     /**
      * {@inheritDoc}
      */
-    public function findAll(?string $q, ?string $sortKey, ?string $sortOrder, int $offset, int $limit): array
+    public function findAll(?string $q, ?string $sortKey, ?string $sortOrder, int $offset, int $limit, ?int $status = null): array
     {
         $allowedSortKeys = ['id', 'name', 'description'];
         $allowedSortOrders = ['ASC', 'DESC'];
@@ -66,7 +105,7 @@ final class ApiClientRepository implements ApiClientRepositoryInterface
         $sortOrder = in_array($sortOrder, $allowedSortOrders) ? $sortOrder : 'ASC';
 
         $sql = "SELECT 
-                    id, name, description, created_at, updated_at
+                    id, name, description, status, created_at, updated_at
                 FROM api_clients
                 WHERE 1=1";
 
@@ -78,12 +117,21 @@ final class ApiClientRepository implements ApiClientRepositoryInterface
             $params[':q2'] = "%$q%";
         }
 
+        if ($status) {
+            $sql .= " AND status = :status";
+            $params[':status'] = $status;
+        }
+
         $sql .= " ORDER BY $sortKey $sortOrder LIMIT :limit OFFSET :offset";
 
         $stmt = $this->pdo->prepare($sql);
 
         foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value, \PDO::PARAM_STR);
+            if ($status) {
+                $stmt->bindValue(':status', $status, \PDO::PARAM_INT);
+            } else {
+                $stmt->bindValue($key, $value, \PDO::PARAM_STR);
+            }
         }
 
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
