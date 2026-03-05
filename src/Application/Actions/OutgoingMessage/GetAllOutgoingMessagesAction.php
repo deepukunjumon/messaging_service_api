@@ -55,7 +55,7 @@ final class GetAllOutgoingMessagesAction extends OutgoingMessageAction
                 'api_client' => 'Client Name',
                 'channel'    => 'Channel',
                 'recipient'  => 'Recipient',
-                'subject'    => 'Subject',
+                'content'    => 'Content',
                 'status'     => 'Status',
                 'created_at' => 'Sent At',
             ];
@@ -63,7 +63,7 @@ final class GetAllOutgoingMessagesAction extends OutgoingMessageAction
             $exporter = new CsvExporter();
             $csv = $exporter->generate($messages, $columns);
 
-            $filename = 'outgoing-messages-' . date('Y-m-d') . '.csv';
+            $filename = 'Outgoing_Message_Logs_' . date('Y-m-d') . '.csv';
 
             $response = $this->response
                 ->withHeader('Content-Type', 'text/csv')

@@ -20,14 +20,14 @@ final class OutgoingMessageRepository implements OutgoingMessageRepositoryInterf
     /**
      * {@inheritDoc}
      */
-    public function create(string $clientId, ?string $apiKeyId, string $channel, string $recipient, ?string $subject, string $body, string $provider, ?array $metadata = null): string
+    public function create(string $clientId, ?string $apiKeyId, string $channel, string $recipient, string $content, string $provider, ?array $metadata = null): string
     {
         try {
 
             $id = Uuid::uuid4()->toString();
 
-            $sql = "INSERT INTO outgoing_messages (id, client_id, api_key_id, channel, recipient, subject, body, provider, metadata, status) 
-                        VALUES (:id, :client_id, :api_key_id, :channel, :recipient, :subject, :body, :provider, :metadata, 'queued')";
+            $sql = "INSERT INTO outgoing_messages (id, client_id, api_key_id, channel, recipient, content, provider, metadata, status) 
+                        VALUES (:id, :client_id, :api_key_id, :channel, :recipient, :content, :provider, :metadata, 'queued')";
             
             $stmt = $this->pdo->prepare($sql);
 
@@ -36,8 +36,7 @@ final class OutgoingMessageRepository implements OutgoingMessageRepositoryInterf
             $stmt->bindValue(':api_key_id', $apiKeyId);
             $stmt->bindValue(':channel', $channel);
             $stmt->bindValue(':recipient', $recipient);
-            $stmt->bindValue(':subject', $subject);
-            $stmt->bindValue(':body', $body);
+            $stmt->bindValue(':content', $content);
             $stmt->bindValue(':provider', $provider);
             $stmt->bindValue(':metadata', $metadata ? json_encode($metadata) : null);
             $result = $stmt->execute();
@@ -55,16 +54,16 @@ final class OutgoingMessageRepository implements OutgoingMessageRepositoryInterf
     /**
      * {@inheritDoc}
      */
-    public function markSent(string $messageId, ?string $providerMessageId = null): bool
+    public function markSent(string $messageId, ?string $providerResponse = null): bool
     {
         try {
              $sql = "UPDATE outgoing_messages 
-                        SET status = 'sent', provider_message_id = :provider_message_id, sent_at = NOW(), attempts = attempts + 1 
+                        SET status = 'sent', provider_response = :provider_response, sent_at = NOW(), attempts = attempts + 1 
                         WHERE id = :id";
             
             $stmt = $this->pdo->prepare($sql);
             $stmt->bindValue(':id', $messageId);
-            $stmt->bindValue(':provider_message_id', $providerMessageId);
+            $stmt->bindValue(':provider_response', $providerResponse);
             return $stmt->execute();
 
         } catch (\PDOException $e) {
@@ -104,8 +103,7 @@ final class OutgoingMessageRepository implements OutgoingMessageRepositoryInterf
                         api_clients.name AS api_client,
                         outgoing_messages.channel,
                         outgoing_messages.recipient,
-                        outgoing_messages.subject,
-                        outgoing_messages.body,
+                        outgoing_messages.content,
                         outgoing_messages.provider,
                         outgoing_messages.metadata,
                         outgoing_messages.status,
@@ -133,11 +131,9 @@ final class OutgoingMessageRepository implements OutgoingMessageRepositoryInterf
             }
             if ($q) { 
                 $sql .= " AND (outgoing_messages.recipient LIKE :q1
-                            OR outgoing_messages.subject LIKE :q2
-                            OR outgoing_messages.body LIKE :q3)"; 
+                            OR outgoing_messages.content LIKE :q2)"; 
                 $params[':q1'] = "%$q%";
                 $params[':q2'] = "%$q%";
-                $params[':q3'] = "%$q%";
             }
 
             $allowedSortKeys = ['created_at', 'id', 'channel'];

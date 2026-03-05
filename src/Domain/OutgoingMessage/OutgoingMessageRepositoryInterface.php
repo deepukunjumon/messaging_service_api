@@ -13,22 +13,21 @@ interface OutgoingMessageRepositoryInterface
      * @param string|null $apiKeyId
      * @param string $channel
      * @param string $recipient
-     * @param string|null $subject
-     * @param string $body
+     * @param string $content
      * @param string $provider
      * @param array|null $metadata
      * @return string The ID of the created message
      */
-    public function create(string $clientId, ?string $apiKeyId, string $channel, string $recipient, ?string $subject, string $body, string $provider, ?array $metadata = null): string;
+    public function create(string $clientId, ?string $apiKeyId, string $channel, string $recipient, string $content, string $provider, ?array $metadata = null): string;
     
     /**
      * Mark a message as sent.
      *
      * @param string $messageId
-     * @param string|null $providerMessageId
+     * @param string|null $providerResponse
      * @return bool
      */
-    public function markSent(string $messageId, ?string $providerMessageId = null): bool;
+    public function markSent(string $messageId, ?string $providerResponse = null): bool;
 
     /**
      * Mark a message as failed.

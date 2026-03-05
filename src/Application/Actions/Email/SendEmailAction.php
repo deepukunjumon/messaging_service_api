@@ -47,6 +47,14 @@ final class SendEmailAction extends EmailAction
                 'rule' => v::notEmpty(),
                 'message' => 'At least one recipient is required'
             ],
+            'cc' => [
+                'rule' => v::optional(v::stringType()),
+                'message' => 'CC must be a comma-separated string or an array of emails'
+            ],
+            'bcc' => [
+                'rule' => v::optional(v::stringType()),
+                'message' => 'BCC must be a comma-separated string or an array of emails'
+            ],
             'subject' => [
                 'rule' => v::stringType()->length(3, 255),
                 'message' => 'Subject must be between 3 and 255 characters'
@@ -75,9 +83,15 @@ final class SendEmailAction extends EmailAction
                     $client['api_key_id'] ?? null,
                     'email',
                     $input['to'],
-                    $input['subject'],
                     $input['body'],
-                    'netcore'
+                    'netcore',
+                    [
+                        'subject' => $input['subject'],
+                        'cc' => $input['cc'],
+                        'bcc' => $input['bcc'],
+                        'is_html' => $isHtml,
+                        'attachments' => $input['attachments']
+                    ]
                 );
 
                 $emailMessage = new EmailMessage(
