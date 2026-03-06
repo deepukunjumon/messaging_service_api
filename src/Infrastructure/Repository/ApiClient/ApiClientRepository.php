@@ -81,6 +81,46 @@ final class ApiClientRepository implements ApiClientRepositoryInterface
     /**
      * {@inheritDoc}
      */
+    public function updateClientDetails(string $clientId, array $details): bool
+    {
+        try {
+
+            if (empty($details)) {
+                return false;
+            }
+
+            $fields = [];
+            $params = [];
+
+            foreach ($details as $column => $value) {
+                $fields[] = "{$column} = :{$column}";
+                $params[$column] = $value;
+            }
+
+            $params['clientId'] = $clientId;
+
+            $sql = "UPDATE api_clients 
+                    SET " . implode(', ', $fields) . "
+                    WHERE id = :clientId";
+
+            $stmt = $this->pdo->prepare($sql);
+
+            return $stmt->execute($params);
+
+        } catch (\Throwable $e) {
+
+            $this->logger->error('Failed to update client details', [
+                'clientId' => $clientId,
+                'error' => $e->getMessage()
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function findById(string $id): ?array
     {
         $stmt = $this->pdo->prepare("

@@ -24,7 +24,17 @@ interface ApiClientRepositoryInterface
      * 
      * @return bool
      */
-    public function updateStatus(string $clientId, int $status);
+    public function updateStatus(string $clientId, int $status): bool;
+
+    /**
+     * Update Client Details
+     * 
+     * @param string $clientId
+     * @param array $details
+     * 
+     * @return bool
+     */
+    public function updateClientDetails(string $clientId, array $details): bool;
 
     /**
      * Finds an API client by ID.
