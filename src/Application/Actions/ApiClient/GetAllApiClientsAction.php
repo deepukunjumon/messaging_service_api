@@ -18,8 +18,8 @@ final class GetAllApiClientsAction extends ApiClientAction
         $params = $this->request->getQueryParams();
 
         $q = isset($params['q']) ? trim((string)$params['q']) : '';
-        $sortKey = isset($params['sort_key']) ? trim((string)$params['sort_key']) : 'created_at';
-        $sortOrder = isset($params['sort_order']) ? trim((string)$params['sort_order']) : 'desc';
+        $sortKey = isset($params['sortKey']) ? trim((string)$params['sortKey']) : 'created_at';
+        $sortOrder = isset($params['sortOrder']) ? trim((string)$params['sortOrder']) : 'desc';
         $limit = isset($params['limit']) ? (int)$params['limit'] : 100;
         $offset = isset($params['offset']) ? (int)$params['offset'] : 0;
 

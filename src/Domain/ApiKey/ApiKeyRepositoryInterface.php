@@ -46,7 +46,9 @@ interface ApiKeyRepositoryInterface
      * Get All API Keys generated for a client
      * 
      * @param string $clientId
+     * @param ?string $q
+     * 
      * @return array
      */
-    public function getClientsApiKeys(string $clientId): array;
+    public function getClientsApiKeys(string $clientId, ?string $q): array;
 }

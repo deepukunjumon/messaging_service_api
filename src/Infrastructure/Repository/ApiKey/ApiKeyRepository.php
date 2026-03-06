@@ -129,7 +129,7 @@ final class ApiKeyRepository implements ApiKeyRepositoryInterface
     /**
      * {@inheritDoc}
      */
-    public function getClientsApiKeys(string $clientId): array
+    public function getClientsApiKeys(string $clientId, ?string $q): array
     {
         try {
             $sql = "SELECT
@@ -140,15 +140,26 @@ final class ApiKeyRepository implements ApiKeyRepositoryInterface
                         ak.created_at,
                         ak.updated_at,
                         ak.client_id AS api_client_id,
-                        ac.name AS api_client_name,
-                        ac.description AS api_client_description
+                        ac.name AS api_client_name
                     FROM api_keys ak
                     INNER JOIN api_clients ac 
                         ON ak.client_id = ac.id
                     WHERE ac.id = :clientId";
 
+            $params = [];
+            if ($q) {
+                $sql .= " AND (
+                            ak.api_key LIKE :q1
+                        )";
+                
+                $params[':q1'] = "%$q%";
+            }
+
             $stmt = $this->pdo->prepare($sql);
+
             $stmt->bindValue(':clientId', $clientId, PDO::PARAM_STR);
+            foreach ($params as $key => $value) $stmt->bindValue($key, $value);
+
             $stmt->execute();
 
             return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];

@@ -18,8 +18,12 @@ final class GetClientApiKeysAction extends ApiClientAction
     {
         $clientId = $this->resolveArg('clientId');
 
+        $params = $this->request->getQueryParams();
+        $q = isset($params['q']) ? trim((string)$params['q']) : '';
+
         $input = [
             'clientId' => $clientId,
+            'q'        => $q
         ];
 
         // Validation rules
@@ -52,7 +56,7 @@ final class GetClientApiKeysAction extends ApiClientAction
 
         try {
 
-            $apiKeys = $this->apiKeyRepo->getClientsApiKeys($clientId);
+            $apiKeys = $this->apiKeyRepo->getClientsApiKeys($clientId, $q);
 
             return $this->respondWithData($apiKeys, 200);
         }

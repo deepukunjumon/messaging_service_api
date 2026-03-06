@@ -54,7 +54,7 @@ final class GenerateApiKeyAction extends ApiClientAction
             $apiKey = $this->apiKeyRepo->create($clientId);
 
             return [
-                'success' => true,
+                'message' => 'API Key Generated',
                 'apiKey'  => $apiKey
             ];
         });

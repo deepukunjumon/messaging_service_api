@@ -67,7 +67,6 @@ final class CreateClientAction extends ApiClientAction
             return $this->respondWithData([
                 'message' => 'Client created successfully',
                 'clientId' => $client['clientId'],
-                'apiKey' => $client['apiKey']
             ], 201);
         } catch (Throwable $e) {
             $this->logger->error('Failed to create API client', ['error' => $e->getMessage()]);
