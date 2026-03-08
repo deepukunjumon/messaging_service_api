@@ -32,8 +32,8 @@ return function (App $app) {
 
         // Client Management
         $group->post('/api-client', CreateClientAction::class);
-        $group->put('/api-clients/{clientId}/status', UpdateClientStatusAction::Class);
-        $group->put('/api-clients/{clientId}', UpdateClientAction::Class);
+        $group->put('/api-client/{clientId}/status', UpdateClientStatusAction::Class);
+        $group->put('/api-client/{clientId}', UpdateClientAction::Class);
         $group->get('/api-clients/{clientId}/keys', GetClientApiKeysAction::class);
         $group->get('/api-clients', GetAllApiClientsAction::class);
         

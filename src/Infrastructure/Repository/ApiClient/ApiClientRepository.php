@@ -12,10 +12,12 @@ use Ramsey\Uuid\Uuid;
 final class ApiClientRepository implements ApiClientRepositoryInterface
 {
     private PDO $pdo;
+    private $logger;
 
-    public function __construct(PDO $pdo)
+    public function __construct(PDO $pdo, $logger = null)
     {
         $this->pdo = $pdo;
+        $this->logger = $logger;
     }
 
     /**
@@ -89,12 +91,23 @@ final class ApiClientRepository implements ApiClientRepositoryInterface
                 return false;
             }
 
+            $allowedColumns = ['name', 'description', 'status'];
+
             $fields = [];
             $params = [];
 
             foreach ($details as $column => $value) {
-                $fields[] = "{$column} = :{$column}";
+
+                if (!in_array($column, $allowedColumns, true)) {
+                    continue;
+                }
+
+                $fields[] = "`{$column}` = :{$column}";
                 $params[$column] = $value;
+            }
+
+            if (empty($fields)) {
+                return false;
             }
 
             $params['clientId'] = $clientId;
@@ -104,8 +117,9 @@ final class ApiClientRepository implements ApiClientRepositoryInterface
                     WHERE id = :clientId";
 
             $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
 
-            return $stmt->execute($params);
+            return $stmt->rowCount() > 0;
 
         } catch (\Throwable $e) {
 
