@@ -5,6 +5,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use App\Application\Actions\Email\SendEmailAction;
 use App\Application\Actions\SMS\SendSmsAction;
+use App\Application\Actions\Dashboard\DashboardServicesAction;
 use App\Application\Actions\ApiClient\CreateClientAction;
 use App\Application\Actions\ApiClient\UpdateClientAction;
 use App\Application\Actions\ApiClient\UpdateClientStatusAction;
@@ -29,6 +30,11 @@ return function (App $app) {
     });
 
     $app->group('/api/v1', function ($group) {
+
+        //Dashboard
+        $group->group('/dashboard', function ($group) {
+            $group->get('/service-stats', DashboardServicesAction::class);
+        });
 
         // Client Management
         $group->post('/api-client', CreateClientAction::class);
