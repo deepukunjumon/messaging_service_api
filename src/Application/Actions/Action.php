@@ -11,6 +11,7 @@ use Psr\Log\LoggerInterface;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpNotFoundException;
 use Throwable;
+use App\Infrastructure\Encryption\ResponseEncryptionUtil;
 
 abstract class Action
 {
@@ -167,12 +168,25 @@ abstract class Action
             JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
         );
 
+        $config = require __DIR__ . '/../../Config/config.php';
+        $appCfg = $config['app'] ?? [];
+        $encryptEnabled = $appCfg['encryption_enabled'] ?? false;
+        $encryptionKey  = $appCfg['encryption_key']    ?? null;
+        if ($encryptEnabled && $encryptionKey) {
+
+            $encrypted = ResponseEncryptionUtil::encrypt($json, $encryptionKey);
+            $json = json_encode(
+                [
+                    'encrypted' => true,
+                    'payload'   => $encrypted,
+                ],
+                JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
+            );
+        }
         $response = $this->response
             ->withHeader('Content-Type', 'application/json')
             ->withStatus($payload->getStatusCode());
-
         $response->getBody()->write($json);
-
         return $response;
     }
 
