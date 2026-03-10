@@ -51,4 +51,14 @@ interface ApiKeyRepositoryInterface
      * @return array
      */
     public function getClientsApiKeys(string $clientId, ?string $q): array;
+
+    /**
+     * Get Active API Keys for a client
+     * 
+     * @param string $clientId
+     * @param ?string $q
+     * 
+     * @return array
+     */
+    public function getClientsActiveApiKeys(string $clientId, ?string $q): array;
 }

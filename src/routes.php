@@ -12,7 +12,9 @@ use App\Application\Actions\ApiClient\UpdateClientStatusAction;
 use App\Application\Actions\ApiClient\GenerateApiKeyAction;
 use App\Application\Actions\ApiClient\UpdateApiKeyStatusAction;
 use App\Application\Actions\ApiClient\GetAllApiClientsAction;
+use App\Application\Actions\ApiClient\GetMinimalApiClientsAction;
 use App\Application\Actions\ApiClient\GetClientApiKeysAction;
+use App\Application\Actions\ApiClient\GetClientActiveApiKeysAction;
 use App\Application\Actions\OutgoingMessage\GetAllOutgoingMessagesAction;
 use App\Application\Middleware\ApiKeyMiddleware;
 use App\Application\Middleware\CorsMiddleware;
@@ -41,7 +43,9 @@ return function (App $app) {
         $group->put('/api-client/{clientId}/status', UpdateClientStatusAction::Class);
         $group->put('/api-client/{clientId}', UpdateClientAction::Class);
         $group->get('/api-clients/{clientId}/keys', GetClientApiKeysAction::class);
+        $group->get('/api-clients/{clientId}/active-keys', GetClientActiveApiKeysAction::class);
         $group->get('/api-clients', GetAllApiClientsAction::class);
+        $group->get('/api-clients/minimal', GetMinimalApiClientsAction::class);
         
         // API Key Routes
         $group->post('/api-keys/generate/{clientId}', GenerateApiKeyAction::class);

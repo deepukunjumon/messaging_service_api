@@ -195,4 +195,29 @@ final class ApiClientRepository implements ApiClientRepositoryInterface
 
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function findActiveMinimal(?string $q): array
+    {
+        $sql = "SELECT id, name FROM api_clients WHERE status = 1";
+
+        $params = [];
+
+        if ($q) {
+            $sql .= " AND name LIKE :q";
+            $params[':q'] = "%$q%";
+        }
+
+        $stmt = $this->pdo->prepare($sql);
+
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, \PDO::PARAM_STR);
+        }
+
+        $stmt->execute();
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
 }

@@ -168,4 +168,37 @@ final class ApiKeyRepository implements ApiKeyRepositoryInterface
             throw new \RuntimeException("Database error: " . $e->getMessage());
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getClientsActiveApiKeys(string $clientId, ?string $q): array
+    {
+        try {
+            $sql = "SELECT id, api_key, status, expires_at
+                    FROM api_keys
+                    WHERE client_id = :clientId
+                    AND status = 1
+                    AND (expires_at IS NULL OR expires_at > NOW())";
+
+            $params = [];
+            if ($q) {
+                $sql .= " AND api_key LIKE :q1";
+                
+                $params[':q1'] = "%$q%";
+            }
+
+            $stmt = $this->pdo->prepare($sql);
+
+            $stmt->bindValue(':clientId', $clientId, PDO::PARAM_STR);
+            foreach ($params as $key => $value) $stmt->bindValue($key, $value);
+
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        } catch (\PDOException $e) {
+            throw new \RuntimeException("Database error: " . $e->getMessage());
+        }
+    }
 }

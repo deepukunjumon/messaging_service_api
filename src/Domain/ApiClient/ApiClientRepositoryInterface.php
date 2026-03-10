@@ -57,4 +57,12 @@ interface ApiClientRepositoryInterface
      * @return array
      */
     public function findAll(?string $q, ?string $sortKey, ?string $sortOrder, int $offset, int $limit, ?int $status = null): array;
+
+    /**
+     * Retrieve active API clients with minimal details
+     *
+     * @param string|null $q
+     * @return array
+     */
+    public function findActiveMinimal(?string $q): array;
 }
